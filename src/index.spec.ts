@@ -120,6 +120,31 @@ for (const service of [
         const link = service(event);
         expect(link).toMatchSnapshot();
       });
+
+
+      test(`generate a ${service.name} link with alarms`, () => {
+        const event: CalendarEvent = {
+          title: "Birthday party",
+          start: "2019-12-29",
+          duration: [2, "hour"],
+          alarms: [
+            {
+              action: "DISPLAY",
+              trigger: "-PT15M",
+              description: "Reminder: Birthday party in 15 minutes",
+            },
+            {
+              action: "EMAIL",
+              trigger: "-PT1H",
+              summary: "Birthday Party Reminder",
+              description: "Don't forget about the birthday party!",
+              attendee: ["reminder@example.com"],
+            },
+          ],
+        };
+        const link = service(event);
+        expect(link).toMatchSnapshot();
+      });
     }
   });
 }

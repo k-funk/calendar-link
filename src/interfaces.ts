@@ -1,5 +1,14 @@
 import * as dayjs from "dayjs";
 
+interface CalendarEventAlarm {
+  action: 'DISPLAY' | 'EMAIL' | 'AUDIO';
+  trigger: string;
+  description?: string;
+  summary?: string;
+  attendee?: string[];
+  attach?: string;
+}
+
 interface CalendarEvent {
   title: string;
   start: any;
@@ -15,6 +24,7 @@ interface CalendarEvent {
   url?: string;
   status?: 'CONFIRMED' | 'TENTATIVE' | 'CANCELLED';
   uid?: string;
+  alarms?: CalendarEventAlarm[];
 }
 
 interface CalendarEventOrganizer {
@@ -78,4 +88,4 @@ interface MsTeams extends Record<string, string | boolean | number | undefined> 
   attendees?: string;
 }
 
-export { CalendarEvent, CalendarEventOrganizer, NormalizedCalendarEvent, Outlook, Yahoo, Google, Aol, MsTeams };
+export { CalendarEvent, CalendarEventAlarm, CalendarEventOrganizer, NormalizedCalendarEvent, Outlook, Yahoo, Google, Aol, MsTeams };

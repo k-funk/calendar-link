@@ -3,6 +3,7 @@ import utc from "dayjs/plugin/utc";
 
 import {
   CalendarEvent,
+  CalendarEventAlarm,
   CalendarEventOrganizer,
   NormalizedCalendarEvent,
   Aol,
@@ -36,7 +37,45 @@ function formatTimes(
   return { start: startTime.format(format), end: endTime.format(format) };
 }
 
-export const eventify = (event: CalendarEvent, toUtc: boolean = true): NormalizedCalendarEvent => {
+function formatAlarms(alarms: CalendarEventAlarm[]): { key: string; value: string }[] {
+  const alarmChunks: { key: string; value: string }[] = [];
+
+  alarms.forEach((alarm) => {
+    alarmChunks.push({ key: "BEGIN", value: "VALARM" });
+    alarmChunks.push({ key: "ACTION", value: alarm.action });
+    alarmChunks.push({ key: "TRIGGER", value: alarm.trigger });
+
+    if (alarm.description) {
+      const formattedDescription = alarm.description
+        .replace(/,/gm, ",")
+        .replace(/;/gm, ";")
+        .replace(/\r\n/gm, "\n")
+        .replace(/\n/gm, "\\n")
+        .replace(/(\\n)[\s\t]+/gm, "\\n");
+      alarmChunks.push({ key: "DESCRIPTION", value: formattedDescription });
+    }
+
+    if (alarm.summary) {
+      alarmChunks.push({ key: "SUMMARY", value: alarm.summary });
+    }
+
+    if (alarm.attendee && alarm.attendee.length > 0) {
+      alarm.attendee.forEach(email => {
+        alarmChunks.push({ key: "ATTENDEE", value: `MAILTO:${email}` });
+      });
+    }
+
+    if (alarm.attach) {
+      alarmChunks.push({ key: "ATTACH", value: alarm.attach });
+    }
+
+    alarmChunks.push({ key: "END", value: "VALARM" });
+  });
+
+  return alarmChunks;
+}
+
+function eventify(event: CalendarEvent, toUtc: boolean = true): NormalizedCalendarEvent {
   const { start, end, duration, ...rest } = event;
   const startTime = toUtc ? dayjs(start).utc() : dayjs(start);
   const endTime = end
@@ -59,7 +98,7 @@ export const eventify = (event: CalendarEvent, toUtc: boolean = true): Normalize
     startTime: startTime,
     endTime: endTime,
   };
-};
+}
 
 export const google = (calendarEvent: CalendarEvent): string => {
   const event = eventify(calendarEvent);
@@ -288,6 +327,7 @@ export const ics = (calendarEvent: CalendarEvent): string => {
       key: "UID",
       value: event.uid || Math.floor(Math.random() * 100000).toString().replace(".", ""),
     },
+    ...(event.alarms ? formatAlarms(event.alarms) : []),
     {
       key: "END",
       value: "VEVENT",
@@ -316,4 +356,4 @@ export const ics = (calendarEvent: CalendarEvent): string => {
   return `data:text/calendar;charset=utf8,${calendarUrl}`;
 };
 
-export { CalendarEvent };
+export { CalendarEvent, CalendarEventAlarm };
